@@ -388,3 +388,162 @@ graph TB
    - etcd backup and restore
    - Certificate rotation
    - Version upgrades 
+
+## Controller Reconciliation Loop
+
+### Reconciliation Loop Pattern
+```mermaid
+graph TD
+    Start[Start] --> Watch[Watch Resources]
+    Watch --> Event[Receive Event]
+    Event --> Get[Get Current State]
+    Get --> Compare[Compare Desired vs Current]
+    Compare -->|Different| Reconcile[Reconcile State]
+    Compare -->|Same| Watch
+    Reconcile --> Update[Update Resources]
+    Update --> Watch
+```
+
+### Reconciliation Loop Components
+
+1. **Watch Phase**
+   - Continuously monitors Kubernetes resources
+   - Uses informers for efficient watching
+   - Caches resource state locally
+   - Example:
+   ```go
+   informer := cache.NewSharedIndexInformer(
+       &cache.ListWatch{
+           ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+               return client.CoreV1().Pods(namespace).List(context.TODO(), options)
+           },
+           WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+               return client.CoreV1().Pods(namespace).Watch(context.TODO(), options)
+           },
+       },
+       &v1.Pod{},
+       0,
+       cache.Indexers{},
+   )
+   ```
+
+2. **Event Handling**
+   - Processes ADD, UPDATE, DELETE events
+   - Filters relevant events
+   - Queues events for processing
+   - Example event types:
+     ```go
+     type EventType string
+     const (
+         Added    EventType = "ADDED"
+         Modified EventType = "MODIFIED"
+         Deleted  EventType = "DELETED"
+     )
+     ```
+
+3. **State Comparison**
+   - Retrieves current state from cluster
+   - Compares with desired state
+   - Identifies differences
+   - Example comparison:
+   ```go
+   func (r *Reconciler) compareStates(desired, current *v1.Pod) bool {
+       return desired.Spec.Containers[0].Image == current.Spec.Containers[0].Image
+   }
+   ```
+
+4. **Reconciliation Logic**
+   - Implements business logic
+   - Makes necessary changes
+   - Handles errors and retries
+   - Example reconciliation:
+   ```go
+   func (r *Reconciler) reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+       // Get current state
+       pod := &v1.Pod{}
+       if err := r.Get(ctx, req.NamespacedName, pod); err != nil {
+           return ctrl.Result{}, err
+       }
+
+       // Compare with desired state
+       if needsUpdate(pod) {
+           // Make changes
+           if err := r.Update(ctx, pod); err != nil {
+               return ctrl.Result{}, err
+           }
+       }
+
+       return ctrl.Result{}, nil
+   }
+   ```
+
+### Best Practices for Reconciliation
+
+1. **Idempotency**
+   - Operations should be safe to repeat
+   - Same input should produce same output
+   - Handle partial failures gracefully
+   - Example:
+   ```go
+   func (r *Reconciler) ensureDeployment(ctx context.Context, desired *appsv1.Deployment) error {
+       current := &appsv1.Deployment{}
+       err := r.Get(ctx, client.ObjectKeyFromObject(desired), current)
+       if apierrors.IsNotFound(err) {
+           return r.Create(ctx, desired)
+       }
+       if err != nil {
+           return err
+       }
+       return r.Update(ctx, desired)
+   }
+   ```
+
+2. **Rate Limiting**
+   - Implement backoff for retries
+   - Use exponential backoff
+   - Set maximum retry attempts
+   - Example:
+   ```go
+   func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+       return ctrl.NewControllerManagedBy(mgr).
+           For(&v1.Pod{}).
+           WithOptions(controller.Options{
+               MaxConcurrentReconciles: 1,
+               RateLimiter: workqueue.NewItemExponentialFailureRateLimiter(
+                   time.Millisecond*100,
+                   time.Second*10,
+               ),
+           }).
+           Complete(r)
+   }
+   ```
+
+3. **Error Handling**
+   - Log errors appropriately
+   - Implement retry logic
+   - Update status fields
+   - Example:
+   ```go
+   func (r *Reconciler) handleError(ctx context.Context, err error, obj client.Object) (ctrl.Result, error) {
+       if apierrors.IsConflict(err) {
+           return ctrl.Result{Requeue: true}, nil
+       }
+       if apierrors.IsNotFound(err) {
+           return ctrl.Result{}, nil
+       }
+       return ctrl.Result{}, err
+   }
+   ```
+
+4. **Status Updates**
+   - Track reconciliation progress
+   - Update resource status
+   - Include error messages
+   - Example:
+   ```go
+   func (r *Reconciler) updateStatus(ctx context.Context, obj client.Object, status string) error {
+       patch := client.MergeFrom(obj.DeepCopy())
+       obj.SetStatus(status)
+       return r.Status().Patch(ctx, obj, patch)
+   }
+   ``` 
