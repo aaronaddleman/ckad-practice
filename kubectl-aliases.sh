@@ -6,6 +6,7 @@ alias kg='kubectl get'
 alias kd='kubectl describe'
 alias ka='kubectl apply -f'
 alias kx='kubectl exec -it'
+alias kdel='kubectl delete --now'
 
 # Function to generate YAML using --dry-run=client
 kyaml() {
@@ -118,11 +119,12 @@ kyaml() {
 
 # Print available aliases and functions
 echo "Available kubectl aliases:"
-echo "k  = kubectl"
-echo "kg = kubectl get"
-echo "kd = kubectl describe"
-echo "ka = kubectl apply -f"
-echo "kx = kubectl exec -it"
+echo "k     = kubectl"
+echo "kg    = kubectl get"
+echo "kd    = kubectl describe"
+echo "ka    = kubectl apply -f"
+echo "kx    = kubectl exec -it"
+echo "kdel  = kubectl delete --now"
 echo ""
 echo "Available functions:"
 echo "kyaml = Generate YAML using --dry-run=client"

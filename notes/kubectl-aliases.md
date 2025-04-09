@@ -11,6 +11,7 @@ This document provides a comprehensive guide to the kubectl aliases and function
 | `kd` | `kubectl describe` | Describe resources |
 | `ka` | `kubectl apply -f` | Apply resources from files |
 | `kx` | `kubectl exec -it` | Execute commands in containers |
+| `kdel` | `kubectl delete --now` | Delete resources immediately |
 
 ## YAML Generation Function (kyaml)
 
@@ -144,6 +145,11 @@ ka -f config/
 # Execute in container
 kx nginx-pod -- /bin/bash
 kx nginx-pod -c nginx-container -- /bin/sh
+
+# Delete resources immediately
+kdel pod nginx
+kdel deployment nginx-deployment
+kdel service nginx-service
 ```
 
 ### Common Combinations
@@ -160,6 +166,12 @@ kg pods -l app=nginx
 # Describe all resources
 kd pods
 kd services
+
+# Delete with labels
+kdel pods -l app=nginx
+
+# Delete with field selector
+kdel pods --field-selector status.phase=Failed
 ```
 
 ## Functions
