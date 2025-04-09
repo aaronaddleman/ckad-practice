@@ -20,8 +20,34 @@ kyaml() {
     resource_name=$2
     shift 2
 
+    # Parse the remaining arguments for the image
+    image=""
+    for arg in "$@"; do
+        if [[ $arg == --image=* ]]; then
+            image="${arg#*=}"
+            break
+        fi
+    done
+
+    if [ -z "$image" ]; then
+        echo "Error: --image flag is required"
+        return 1
+    fi
+
     # Run kubectl create with --dry-run=client
-    kubectl create $resource_type $resource_name "$@" --dry-run=client -o yaml
+    case "$resource_type" in
+        pod)
+            kubectl run $resource_name --image=$image --dry-run=client -o yaml
+            ;;
+        deployment)
+            kubectl create deployment $resource_name --image=$image --dry-run=client -o yaml
+            ;;
+        *)
+            echo "Error: Unsupported resource type: $resource_type"
+            echo "Supported types: pod, deployment"
+            return 1
+            ;;
+    esac
 }
 
 # Print available aliases and functions
