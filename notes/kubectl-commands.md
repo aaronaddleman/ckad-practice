@@ -90,3 +90,342 @@ Events:
 - Events section is particularly useful for troubleshooting
 - Use `-n` flag to specify namespace when needed
 - Can describe multiple resources of the same type at once 
+
+## Kubectl Verbs
+
+### Common Verbs
+```mermaid
+graph TD
+    Verbs[Kubernetes Verbs] --> Create[create]
+    Verbs --> Get[get]
+    Verbs --> Describe[describe]
+    Verbs --> Delete[delete]
+    Verbs --> Apply[apply]
+    Verbs --> Edit[edit]
+    Verbs --> Exec[exec]
+    Verbs --> Logs[logs]
+    Verbs --> PortForward[port-forward]
+    Verbs --> Expose[expose]
+    Verbs --> Label[label]
+    Verbs --> Annotate[annotate]
+    Verbs --> Scale[scale]
+    Verbs --> Rollout[rollout]
+    Verbs --> Cordon[cordon]
+    Verbs --> Drain[drain]
+    Verbs --> Taint[taint]
+    Verbs --> Top[top]
+    
+    Create -->|Creates new resources| Resources
+    Get -->|Retrieves resources| Resources
+    Describe -->|Shows detailed info| Resources
+    Delete -->|Removes resources| Resources
+    Apply -->|Applies configuration| Resources
+    Edit -->|Edits resources| Resources
+    Exec -->|Executes command| Pods
+    Logs -->|Shows logs| Pods
+    PortForward -->|Forwards ports| Pods/Services
+    Expose -->|Exposes services| Resources
+    Label -->|Adds labels| Resources
+    Annotate -->|Adds annotations| Resources
+    Scale -->|Scales resources| Deployments/ReplicaSets
+    Rollout -->|Manages rollouts| Deployments
+    Cordon -->|Marks node unschedulable| Nodes
+    Drain -->|Drains node| Nodes
+    Taint -->|Adds taints| Nodes
+    Top -->|Shows resource usage| Nodes/Pods
+```
+
+### Verb Usage Examples
+
+1. **create**
+   - Creates a new resource from a file or stdin
+   - Examples:
+     ```bash
+     # Create from file
+     kubectl create -f pod.yaml
+     
+     # Create from stdin
+     cat pod.yaml | kubectl create -f -
+     
+     # Create namespace
+     kubectl create namespace my-namespace
+     ```
+
+2. **get**
+   - Lists and displays resources
+   - Examples:
+     ```bash
+     # List all pods
+     kubectl get pods
+     
+     # List pods in specific namespace
+     kubectl get pods -n my-namespace
+     
+     # Get specific pod
+     kubectl get pod my-pod
+     
+     # Get with wide output
+     kubectl get pods -o wide
+     ```
+
+3. **describe**
+   - Shows detailed information about resources
+   - Examples:
+     ```bash
+     # Describe a pod
+     kubectl describe pod my-pod
+     
+     # Describe a service
+     kubectl describe service my-service
+     
+     # Describe all pods in namespace
+     kubectl describe pods -n my-namespace
+     ```
+
+4. **delete**
+   - Removes resources from the cluster
+   - Examples:
+     ```bash
+     # Delete a pod
+     kubectl delete pod my-pod
+     
+     # Delete using file
+     kubectl delete -f pod.yaml
+     
+     # Delete all pods in namespace
+     kubectl delete pods --all -n my-namespace
+     
+     # Force delete
+     kubectl delete pod my-pod --force --grace-period=0
+     ```
+
+5. **apply**
+   - Applies configuration to resources
+   - Examples:
+     ```bash
+     # Apply configuration from file
+     kubectl apply -f deployment.yaml
+     
+     # Apply configuration from stdin
+     cat deployment.yaml | kubectl apply -f -
+     
+     # Apply with force
+     kubectl apply -f deployment.yaml --force
+     ```
+
+6. **edit**
+   - Edits resources
+   - Examples:
+     ```bash
+     # Edit deployment
+     kubectl edit deployment my-deployment
+     
+     # Edit with specific editor
+     KUBE_EDITOR="nano" kubectl edit deployment my-deployment
+     ```
+
+7. **exec**
+   - Executes command in container
+   - Examples:
+     ```bash
+     # Execute command in pod
+     kubectl exec my-pod -- ls /var/log
+     
+     # Execute interactive shell
+     kubectl exec -it my-pod -- /bin/bash
+     
+     # Execute in specific container
+     kubectl exec -it my-pod -c my-container -- /bin/bash
+     ```
+
+8. **logs**
+   - Shows container logs
+   - Examples:
+     ```bash
+     # Show pod logs
+     kubectl logs my-pod
+     
+     # Show logs with follow
+     kubectl logs -f my-pod
+     
+     # Show logs for specific container
+     kubectl logs my-pod -c my-container
+     
+     # Show logs with timestamps
+     kubectl logs my-pod --timestamps
+     ```
+
+9. **port-forward**
+   - Forwards ports to pod or service
+   - Examples:
+     ```bash
+     # Forward to pod
+     kubectl port-forward my-pod 8080:80
+     
+     # Forward to service
+     kubectl port-forward svc/my-service 8080:80
+     
+     # Forward to deployment
+     kubectl port-forward deployment/my-deployment 8080:80
+     ```
+
+10. **expose**
+    - Exposes resources as services
+    - Examples:
+      ```bash
+      # Expose deployment
+      kubectl expose deployment my-deployment --port=80 --target-port=8080
+      
+      # Expose with type
+      kubectl expose deployment my-deployment --type=LoadBalancer
+      
+      # Expose with name
+      kubectl expose deployment my-deployment --name=my-service
+      ```
+
+11. **label**
+    - Adds or modifies labels
+    - Examples:
+      ```bash
+      # Add label to pod
+      kubectl label pods my-pod env=prod
+      
+      # Overwrite existing label
+      kubectl label pods my-pod env=prod --overwrite
+      
+      # Remove label
+      kubectl label pods my-pod env-
+      ```
+
+12. **annotate**
+    - Adds or modifies annotations
+    - Examples:
+      ```bash
+      # Add annotation
+      kubectl annotate pods my-pod description="Production pod"
+      
+      # Overwrite annotation
+      kubectl annotate pods my-pod description="Updated description" --overwrite
+      
+      # Remove annotation
+      kubectl annotate pods my-pod description-
+      ```
+
+13. **scale**
+    - Scales resources
+    - Examples:
+      ```bash
+      # Scale deployment
+      kubectl scale deployment my-deployment --replicas=3
+      
+      # Scale with current replicas
+      kubectl scale deployment my-deployment --current-replicas=2 --replicas=3
+      ```
+
+14. **rollout**
+    - Manages deployment rollouts
+    - Examples:
+      ```bash
+      # Check rollout status
+      kubectl rollout status deployment/my-deployment
+      
+      # Pause rollout
+      kubectl rollout pause deployment/my-deployment
+      
+      # Resume rollout
+      kubectl rollout resume deployment/my-deployment
+      
+      # Undo rollout
+      kubectl rollout undo deployment/my-deployment
+      ```
+
+15. **cordon**
+    - Marks node as unschedulable
+    - Examples:
+      ```bash
+      # Cordon node
+      kubectl cordon my-node
+      
+      # Uncordon node
+      kubectl uncordon my-node
+      ```
+
+16. **drain**
+    - Safely evicts pods from node
+    - Examples:
+      ```bash
+      # Drain node
+      kubectl drain my-node
+      
+      # Drain with ignore daemonsets
+      kubectl drain my-node --ignore-daemonsets
+      
+      # Drain with force
+      kubectl drain my-node --force
+      ```
+
+17. **taint**
+    - Adds taints to nodes
+    - Examples:
+      ```bash
+      # Add taint
+      kubectl taint nodes my-node key=value:NoSchedule
+      
+      # Remove taint
+      kubectl taint nodes my-node key:NoSchedule-
+      ```
+
+18. **top**
+    - Shows resource usage
+    - Examples:
+      ```bash
+      # Show node metrics
+      kubectl top nodes
+      
+      # Show pod metrics
+      kubectl top pods
+      
+      # Show pod metrics in namespace
+      kubectl top pods -n my-namespace
+      ```
+
+### Verb Combinations
+
+1. **Create and Apply**
+   ```bash
+   # Create if not exists, update if exists
+   kubectl apply -f resource.yaml
+   
+   # Create only (fails if exists)
+   kubectl create -f resource.yaml
+   ```
+
+2. **Get and Describe**
+   ```bash
+   # Get basic info
+   kubectl get pods
+   
+   # Get detailed info
+   kubectl describe pods
+   ```
+
+3. **Delete with Selectors**
+   ```bash
+   # Delete by label
+   kubectl delete pods -l app=nginx
+   
+   # Delete by field selector
+   kubectl delete pods --field-selector status.phase=Failed
+   ```
+
+### Tips for CKAD Exam
+1. Use `kubectl create` for one-time resource creation
+2. Use `kubectl apply` for declarative updates
+3. Remember `-o wide` for more detailed output
+4. Use `-n` for namespace-specific operations
+5. Combine verbs with selectors for bulk operations
+6. Use `--dry-run=client -o yaml` to generate YAML
+7. Remember `-f` for file operations
+8. Use `-it` for interactive commands
+9. Know the difference between `create` and `apply`
+10. Use `--force` when needed for updates 
