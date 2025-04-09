@@ -96,25 +96,36 @@ Events:
 ### Common Verbs
 ```mermaid
 graph LR
-    Verbs[Kubernetes Verbs] --> Create[create]
-    Verbs --> Get[get]
-    Verbs --> Describe[describe]
-    Verbs --> Delete[delete]
-    Verbs --> Apply[apply]
-    Verbs --> Edit[edit]
-    Verbs --> Exec[exec]
-    Verbs --> Logs[logs]
-    Verbs --> PortForward[port-forward]
-    Verbs --> Expose[expose]
-    Verbs --> Label[label]
-    Verbs --> Annotate[annotate]
-    Verbs --> Scale[scale]
-    Verbs --> Rollout[rollout]
-    Verbs --> Cordon[cordon]
-    Verbs --> Drain[drain]
-    Verbs --> Taint[taint]
-    Verbs --> Top[top]
-    
+    subgraph Basic Operations
+        Create[create]
+        Get[get]
+        Describe[describe]
+        Delete[delete]
+        Apply[apply]
+        Edit[edit]
+    end
+
+    subgraph Debugging & Monitoring
+        Exec[exec]
+        Logs[logs]
+        PortForward[port-forward]
+        Top[top]
+    end
+
+    subgraph Resource Management
+        Expose[expose]
+        Label[label]
+        Annotate[annotate]
+        Scale[scale]
+        Rollout[rollout]
+    end
+
+    subgraph Node Management
+        Cordon[cordon]
+        Drain[drain]
+        Taint[taint]
+    end
+
     Create -->|Creates new resources| Resources
     Get -->|Retrieves resources| Resources
     Describe -->|Shows detailed info| Resources
